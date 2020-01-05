@@ -8,6 +8,7 @@ import keras
 import tensorflow
 tensorflow.sqrt(4.)
 random.seed(0)
+
 def minkowskiDist(v1, v2, p):
     """ v1 and v2 are equal-length arrays of numbers, we normalieze every
         observation of each featuresvector and then
@@ -244,8 +245,11 @@ import sklearn.linear_model
 erf = []
 unerf = [] 
 
+
+             
 def split80_20(examples):
-    sampleIndices = random.sample(range(len(examples)),len(examples)//5)
+    sampleIndices = random.sample(range(len(examples)),
+                                  len(examples)//5)
     trainingSet, testSet = [], []
     for i in range(len(examples)):
         if i in sampleIndices:
@@ -254,6 +258,21 @@ def split80_20(examples):
             trainingSet.append(examples[i])
     return trainingSet, testSet
 
+def randomSplits(examples, method, numSplits, toPrint = True):
+    truePos, falsePos, trueNeg, falseNeg = 0, 0, 0, 0
+    random.seed(0)
+    for t in range(numSplits):
+        trainingSet, testSet = split80_20(examples)
+        results = method(trainingSet, testSet)
+        truePos += results[0]
+        falsePos += results[1]
+        trueNeg += results[2]
+        falseNeg += results[3]
+    getStats(truePos/numSplits, falsePos/numSplits,
+             trueNeg/numSplits, falseNeg/numSplits, toPrint)
+    return truePos/numSplits, falsePos/numSplits,\
+             trueNeg/numSplits, falseNeg/numSplits
+             
 
 def buildModel(examples, toPrint = True):
     featureVecs, labels = [],[]
@@ -261,7 +280,8 @@ def buildModel(examples, toPrint = True):
         featureVecs.append(e.getFeatures())
         labels.append(e.getLabel())
     LogisticRegression = sklearn.linear_model.LogisticRegression
-    model = LogisticRegression().fit(featureVecs, labels)
+    model = LogisticRegression(solver='lbfgs').fit(featureVecs, labels)
+    ##apply solver to discard warnings
     if toPrint:
         print('model.classes_ =', model.classes_)
         for i in range(len(model.coef_)):
@@ -293,21 +313,34 @@ def applyModel(model, testSet, label, prob = 0.5):
                 falseNeg += 1
                 unerf.append(testSet[i])
 
+
     return truePos, falsePos, trueNeg, falseNeg
 
-def lr(trainingData, testData, prob = 0.5):
-    model = buildModel(trainingData, False)
-    results = applyModel(model, testData,'erfolg', prob)
+def lr(trainingData, testData, prob = 0.580):    #to change thread of judgement
+    model = buildModel(trainingData, True)
+    results = applyModel(model, testData, 1, prob)
     return results
 
 
 #print('Average of Leave-One-Out testing using LR')
 #truePos, falsePos, trueNeg, falseNeg = leaveOneOut(examples, lr)
 
-print('Average of Leave-One-Out testing using LR')
+#print('Average of Leave-One-Out testing using LR')
+#truePos, falsePos, trueNeg, falseNeg =\
+#      leaveOneOut(examples, lr)
+#     
+
+#trainingSet, testSet = split80_20(examples)
+#model = buildModel(trainingSet, True)
+
+##numSplits = 10
+numSplits = 5
+print('Average of', numSplits, '80/20 splits LR')
 truePos, falsePos, trueNeg, falseNeg =\
-      leaveOneOut(examples, lr)
-      
+      randomSplits(examples, lr, numSplits)
+
+print('le=',len(erf),'ue=',len(unerf))
+        
 a,b,aa,bb=[],[],[],[]
 for i in erf:
     a.append(i.time1)

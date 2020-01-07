@@ -225,13 +225,13 @@ x=[]
 y=[]
 for i in erfolgreich:
     x.append(i.time1)
-    y.append(i.g_type)
+    y.append(i.vorschub)
 
 matplotlib.pyplot.plot(x,y,'.b')
 xx,yy =[],[] 
 for i in unerfolgreich:
     xx.append(i.time1)
-    yy.append(i.g_type)
+    yy.append(i.vorschub)
 matplotlib.pyplot.plot(xx,yy,'.r')
 print('blue dot means erfolg')
 matplotlib.pyplot.show()
